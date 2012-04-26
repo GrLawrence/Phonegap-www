@@ -4,36 +4,181 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Craigslist</title>
 	<link rel="stylesheet"  href="css/themes/default/jquery.mobile-1.1.0.min.css" />
-	<script src="js/jquery.js"></script>
-	<script src="js/jquery.mobile-1.1.0.min.js"></script>	
+	<script type="text/javascript" src="js/jquery.js"></script>
+	<script type="text/javascript" src="js/date.js"></script>
+	<script type="text/javascript" src="js/jquery.mobile-1.1.0.min.js"></script>	
+	<style>
+		a {
+			color: #ffffff;		
+			text-decoration: none;	
+		}
+		
+		h4 span {
+			margin-top: 0px;
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;		
+			color: white;
+			font: bold 10px;
+			letter-spacing: -1px;
+			background: rgb(0, 0, 0); /* fallback color */
+			background: rgba(0, 0, 0, 0.7);
+			padding: 10px;	
+		}
+		
+		.banner span{			
+			//margin-bottom: 0px;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 100%;		
+			color: white;
+			font: 16px Helvetica, Sans-Serif;
+			letter-spacing: -1px;
+			background: rgb(0, 0, 0); /* fallback color */
+			background: rgba(0, 0, 0, 0.7);
+			padding: 10px;	
+		}
+		
+		#content {
+			width: 100%;
+			padding-top: 0px;
+			padding-left: 0px;
+		}
+		
+		.entry {
+			margin-top: 3px;
+			margin-left: 0px;
+			width: 100%;
+			height: 50%;
+			position: relative;
+		    //-o-background-size: 100% 100%;
+		    -webkit-background-size: 100% 100%;
+		    //-khtml-background-size : 100% 100%;
+		    //-moz-background-size: 100% 100%;
+		    background-position: center center;
+		}
+	</style>
 <title>PhoneGap</title>
 <script type="text/javascript" charset="utf-8" src="js/cordova-1.6.0.js"></script>
+    <script type="text/javascript">
+        function get_rss_feed() {
+            $("#feedContent").empty();
+			$("#noItemText").hide();
+			var noItemsFound = false;
+			
+			var searchTerms = ["camaro", "seats", "1969"];
+			
+			var headerNode = $('<h1 />')
+			headerNode.text(searchTerms.join(' '));
+			$('#header').find('h1:first').text(searchTerms.join(' '));			
+			
+            
+            var feedUrl = "http://minneapolis.craigslist.org/search/pta?hasPic=1&query=" + searchTerms.join("%20") + "&srchType=A&format=rss";
+
+            //use the JQuery get to grab the URL from the selected item, put the results in to an argument for parsing in the inline function called when the feed retrieval is complete
+            $.get(feedUrl, function(d) {
+
+                //find each 'item' in the file and parse it
+                $(d).find('item').each(function() {
+					
+					var newNode = $("<div class=\"entry\"></div>");
+
+                    //name the current found item this for this particular loop run
+                    var $item = $(this);
+					
+                    // grab the post title
+                    var title = $item.find('title:first').text().substring(0,30);
+					
+                    // grab the post's URL
+                    var link = $item.find('link').text();
+					
+					var date = Date.parse($item.find('date').text().substring(0, 19)).toString('M/d/yyyy'); //
+                    
+					var linkNode = $('<a />');
+					linkNode.attr("class", ".itemLink");
+					linkNode.attr('href', link).attr('target', "_blank").text(title);
+
+					var spanNode = $('<span/>');
+					spanNode.append(linkNode);
+					var dateNode = $('<span class="date" />');
+					dateNode.text(date);
+					spanNode.append(dateNode);
+					
+					spanNode.append(date);
+					
+
+					$.get(link, function(doc) {
+						$(doc).find('img:first').each(function() {
+							var $image = $(this);
+							var url = $image.attr('src');
+							var itemPhoto = $('<img />');
+							
+							itemPhoto.hide();
+							itemPhoto.bind('load', function()
+							{
+							    var imgHeight = $(this).height();
+								var imgWidth = $(this).width();
+								
+								var parentDiv = $(this).parent();
+								var parentHeight = parentDiv.height();
+								var parentWidth = parentDiv.width();
+								
+								var paddingLeft = $(content).css('padding-left');
+								var paddingRight = $(content).css('padding-right')
+								
+								var aspectRatio = imgHeight/imgWidth;
+								var newWidth = parentDiv.width(); // -(parseFloat(paddingLeft.replace("px","")) + parseFloat(paddingRight.replace("px","")));
+								var newHeight = newWidth * aspectRatio;
+								
+								$(this).height(newHeight);
+								$(this).width(newWidth);								
+
+							});
+							
+							itemPhoto.attr('src', url);
+
+							var h2Node = $("<span class='banner'></span>");
+							var spanNode = $('<span />');
+							
+							spanNode.append(linkNode);
+							h2Node.append(spanNode);
+							newNode.append(itemPhoto);
+							newNode.append(h2Node);
+							
+							appendItem(newNode);	
+							itemPhoto.show();
+						})
+					});
+
+                });
+            });
+        };
+		
+		function appendItem(node) {
+			$('#feedContent').append(node);
+		}
+    </script>
 </head>
 <body>
 <div data-role="page" id="carb">
 
-	<div data-role="header">
-		<h1>Carburetor</h1>
+	<div id="header" data-role="header">
+		<h1>Search Results</h1>
 	</div>
 
-	<div data-role="content" >	
-		Engine Displacement(in<sup>3</sup>): <br> 
-		<input id="cid" type="text" />
-		<br>
-		Maximum RPM: <br>
-		<input id="rpm" type="text">
-		<br>
-		<div style="text-align: center;"><label style="font-weight: bold;" id="result"></label></div>
-		<br>	
-		<input type="button" onClick="carbCalculate()" value="Calculate">
-        <br>
-        <div style="text-align: center;"><label id="history"></label> </div>
-
+	<div id="content" data-role="content" >	
+        <div id="noItemText"> No Items Found </div>
+        <div id="feedContent" ></div>
 	</div>
 	
 	<div data-role="footer" data-theme="d">
 		<h4>Page Footer</h4>
 	</div>
 </div>
+<script type="text/javascript">
+    get_rss_feed();
+</script>
 </body>
 </html>
