@@ -22,7 +22,7 @@
 			color: white;
 			font: bold 10px;
 			letter-spacing: -1px;
-			background: rgb(0, 0, 0); /* fallback color */
+			background: rgb(0, 0, 0); /* fallback */
 			background: rgba(0, 0, 0, 0.7);
 			padding: 10px;	
 		}
@@ -36,7 +36,7 @@
 			color: white;
 			font: 16px Helvetica, Sans-Serif;
 			letter-spacing: -1px;
-			background: rgb(0, 0, 0); /* fallback color */
+			background: rgb(0, 0, 0); /* fallback */
 			background: rgba(0, 0, 0, 0.7);
 			padding: 10px;	
 		}
@@ -53,35 +53,31 @@
 			width: 100%;
 			height: 50%;
 			position: relative;
-		    //-o-background-size: 100% 100%;
 		    -webkit-background-size: 100% 100%;
-		    //-khtml-background-size : 100% 100%;
-		    //-moz-background-size: 100% 100%;
 		    background-position: center center;
 		}
 	</style>
-<title>PhoneGap</title>
+<title>Window Shop</title>
 <script type="text/javascript" charset="utf-8" src="js/cordova-1.6.0.js"></script>
     <script type="text/javascript">
-        function get_rss_feed() {
+    	
+        function get_rss_feed(searchText) {
             $("#feedContent").empty();
-			$("#noItemText").hide();
-			var noItemsFound = false;
+			var itemsFound = false;
 			
-			var searchTerms = ["camaro", "seats", "1969"];
-			
-			var headerNode = $('<h1 />')
-			headerNode.text(searchTerms.join(' '));
-			$('#header').find('h1:first').text(searchTerms.join(' '));			
+			var searchTerms = searchText.split(' ');
+
+			$('#header').find('#searchTerms').text(searchTerms.join(' '));	
 			
             
             var feedUrl = "http://minneapolis.craigslist.org/search/pta?hasPic=1&query=" + searchTerms.join("%20") + "&srchType=A&format=rss";
 
             //use the JQuery get to grab the URL from the selected item, put the results in to an argument for parsing in the inline function called when the feed retrieval is complete
             $.get(feedUrl, function(d) {
-
-                //find each 'item' in the file and parse it
-                $(d).find('item').each(function() {
+				if($(d).find('item').length > 0)
+				{	
+					$('#noItemText').hide();
+	                $(d).find('item').each(function() {
 					
 					var newNode = $("<div class=\"entry\"></div>");
 
@@ -106,8 +102,7 @@
 					dateNode.text(date);
 					spanNode.append(dateNode);
 					
-					spanNode.append(date);
-					
+					spanNode.append(date);					
 
 					$.get(link, function(doc) {
 						$(doc).find('img:first').each(function() {
@@ -153,6 +148,11 @@
 					});
 
                 });
+				}
+				else{
+					$('#noItemText').show();
+				}
+
             });
         };
 		
@@ -162,23 +162,45 @@
     </script>
 </head>
 <body>
-<div data-role="page" id="carb">
+<div data-theme="a" data-role="page" id="results">
 
-	<div id="header" data-role="header">
-		<h1>Search Results</h1>
+	<div id="header" data-role="header" data-position="fixed">
+			<input type="search" name="search" id="searchText" data-mini="true" value="" />
 	</div>
 
 	<div id="content" data-role="content" >	
-        <div id="noItemText"> No Items Found </div>
+        <div id="noItemText">No Items Matched Your Search</div>
         <div id="feedContent" ></div>
 	</div>
 	
-	<div data-role="footer" data-theme="d">
-		<h4>Page Footer</h4>
+	<div data-role="footer" data-theme="a" data-position="fixed">
+		<!-- <h4>Page Footer</h4> -->
 	</div>
+	
 </div>
 <script type="text/javascript">
-    get_rss_feed();
+/*
+	window.addEventListener('load', function () {
+	    document.addEventListener('deviceready', get_rss_feed(), false);
+	}, false);
+
+*/
+		$(document).keypress(function(evt) {
+			var key =  evt.keyCode ? evt.keyCode : evt.which;
+            if(key == 13){
+				var txt = $('#searchText').val();
+				if(txt.length == 0)
+					{alert('please enter some text'
+				)}
+				else{
+					get_rss_feed($('#searchText').val());
+				}			}		
+		})
+		$('#noItemText').hide();
+		$('#btnSearch').click(function () {
+
+			});
+    	
 </script>
 </body>
 </html>
